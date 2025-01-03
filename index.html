@@ -7,51 +7,45 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="background-stars"></div>
     <div class="container">
-        <!-- Decorative circles for food icons -->
-        <div class="decoration-circle left-circle"></div>
-        <div class="decoration-circle right-circle"></div>
-        
-        <!-- Main content area -->
         <div class="main-content">
-            <!-- Recipe output area -->
-            <div id="recipe-display" class="recipe-display">
+            <!-- Recipe Display Section -->
+            <div class="recipe-display">
                 <div class="recipe-header">
-                    <h2 id="recipe-title">Recipe Name will appear here</h2>
+                    <h2 id="recipe-title">Your Recipe Will Appear Here</h2>
                 </div>
                 <div id="recipe-image" class="recipe-image">
-                    <!-- Recipe image will be dynamically added here -->
+                    <!-- Recipe image will appear here -->
                 </div>
-                <div id="recipe-steps" class="recipe-steps">
-                    <!-- Recipe steps will appear here -->
+                <div id="recipe-content" class="recipe-content">
+                    <div id="recipe-ingredients" class="recipe-ingredients">
+                        <!-- Ingredients will appear here -->
+                    </div>
+                    <div id="recipe-instructions" class="recipe-instructions">
+                        <!-- Instructions will appear here -->
+                    </div>
                 </div>
             </div>
 
-            <!-- Ingredients input area -->
+            <!-- Ingredients Selection Section -->
             <div class="ingredients-panel">
                 <div class="ingredients-header">
-                    <h2>Enter Ingredients</h2>
+                    <h2>Select Ingredients</h2>
                 </div>
                 <div class="search-container">
-                    <input type="text" id="ingredient-search" placeholder="Search ingredients...">
-                    <div id="ingredients-dropdown" class="ingredients-dropdown"></div>
+                    <input type="text" id="ingredient-search" placeholder="Search or add ingredients...">
+                    <button id="add-ingredient" class="add-button">Add</button>
                 </div>
-                <div class="ingredients-list-container">
-                    <h3>Available Ingredients</h3>
-                    <div id="ingredients-list" class="ingredients-list">
-                        <!-- Dynamically filled with ingredients -->
-                    </div>
-                    <div id="page-navigation" class="page-navigation">
-                        <!-- Page navigation for ingredients -->
-                    </div>
+                <div class="selected-ingredients">
+                    <h3>Selected Ingredients</h3>
+                    <ul id="selected-ingredients-list" class="selected-ingredients-list">
+                        <!-- Selected ingredients will appear here -->
+                    </ul>
                 </div>
-                <button id="find-recipe-btn" class="find-recipe-btn">Find a Recipe!</button>
+                <button id="generate-recipe" class="generate-button">Generate Recipe</button>
             </div>
         </div>
     </div>
-
-    <!-- Add script to load after all DOM elements -->
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html>
