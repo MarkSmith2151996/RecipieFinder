@@ -1,6 +1,6 @@
 // API Details
 const API_URL = "https://api.spoonacular.com/recipes/findByIngredients";
-const API_KEY = "Yf83fb2d554b34fbeb1d7ba06863bc085"; 
+const API_KEY = "Yf83fb2d554b34fbeb1d7ba06863bc085"; // Replace with your API key
 
 // DOM Elements
 const searchBtn = document.getElementById("search-btn");
@@ -9,10 +9,10 @@ const recipeResults = document.getElementById("recipe-results");
 const leftShuffler = document.querySelector(".image-shuffler.left");
 const rightShuffler = document.querySelector(".image-shuffler.right");
 
-// Sample Food Images
+// Images Directory
 const foodImages = [
-  "food1.jpg", "food2.jpg", "food3.jpg", // Replace with actual image URLs
-  "food4.jpg", "food5.jpg", "food6.jpg"
+  "Food/food1.jpg", "Food/food2.jpg", "Food/food3.jpg",
+  "Food/food4.jpg", "Food/food5.jpg", "Food/food6.jpg"
 ];
 
 // Initialize Image Shufflers
