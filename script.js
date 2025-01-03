@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ingredientsDropdown = document.getElementById('ingredients-dropdown');
     const findRecipeBtn = document.getElementById('find-recipe-btn');
     const pageNavigation = document.getElementById('page-navigation');
-    const recipeDisplay = document.getElementById('recipe-display'); // Added for recipe display
+    const recipeDisplay = document.getElementById('recipe-display');
 
     let currentPage = 0;
     const itemsPerPage = 10;
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const totalPages = Math.ceil(ingredients.length / itemsPerPage);
-        pageNavigation.innerHTML = `
+        pageNavigation.innerHTML = ` 
             <button ${currentPage === 0 ? 'disabled' : ''} onclick="changePage(-1)">Previous</button>
             <button ${currentPage === totalPages - 1 ? 'disabled' : ''} onclick="changePage(1)">Next</button>
         `;
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Event listener for the find recipe button
-    findRecipeBtn.addEventListener('click', () => {
+    findRecipeBtn.addEventListener('click', async () => {
         // Gather selected ingredients
         selectedIngredients = [];
         document.querySelectorAll('.ingredient-checkbox:checked').forEach(checkbox => {
@@ -90,21 +90,64 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Simulate a recipe based on selected ingredients
-        displayRecipe(selectedIngredients);
+        // Call OpenAI API to generate the recipe and image
+        await generateRecipeAndImage(selectedIngredients);
     });
 
-    // Function to display the recipe
-    function displayRecipe(ingredients) {
-        // Example: simulate a recipe based on selected ingredients
-        const recipe = `
-            <h3>Recipe Based on Selected Ingredients:</h3>
-            <p><strong>Ingredients:</strong> ${ingredients.join(', ')}</p>
-            <p><strong>Instructions:</strong> Combine all selected ingredients in a pan and cook for 15 minutes. Enjoy your meal!</p>
+    // Function to display the generated recipe
+    function displayRecipe(recipeName, recipeSteps, imageUrl) {
+        recipeDisplay.innerHTML = `
+            <div class="recipe-header">
+                <h2>${recipeName}</h2>
+            </div>
+            <div class="recipe-image">
+                <img src="${imageUrl}" alt="${recipeName}" />
+            </div>
+            <div class="recipe-steps">
+                <h3>Instructions:</h3>
+                <p>${recipeSteps}</p>
+            </div>
         `;
-        recipeDisplay.innerHTML = recipe;
+    }
+
+    // Function to generate the recipe and image using OpenAI API
+    async function generateRecipeAndImage(ingredients) {
+        try {
+            // Prepare prompt for OpenAI recipe generation
+            const recipePrompt = `Create a recipe based on the following ingredients: ${ingredients.join(', ')}. Include the recipe name and detailed instructions.`;
+
+            // Call OpenAI API for recipe generation
+            const recipeResponse = await fetch('/api/generate-recipe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: recipePrompt }),
+            });
+            const recipeData = await recipeResponse.json();
+
+            const recipeName = recipeData.recipeName;
+            const recipeSteps = recipeData.recipeSteps;
+
+            // Call OpenAI API (DALL·E) for image generation
+            const imageResponse = await fetch('/api/generate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: `Image of a delicious dish made with ingredients like ${ingredients.join(', ')}` }),
+            });
+            const imageData = await imageResponse.json();
+            const imageUrl = imageData.imageUrl;
+
+            // Display the generated recipe and image
+            displayRecipe(recipeName, recipeSteps, imageUrl);
+
+        } catch (error) {
+            console.error('Error generating recipe and image:', error);
+        }
     }
 
     // Initial update of the ingredients list
-    updateIngredientsList();  
+    updateIngredientsList();
 });
