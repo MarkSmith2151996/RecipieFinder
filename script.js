@@ -1,167 +1,110 @@
-const API_URL = "https://api.spoonacular.com/recipes/findByIngredients";
-const API_KEY = "Yf83fb2d554b34fbeb1d7ba06863bc085";
+document.addEventListener('DOMContentLoaded', () => {
+    const ingredients = [
+        "Tomato", "Cheese", "Chicken", "Spinach", "Carrot", "Lettuce", "Onion", "Garlic", "Olive Oil", "Salt", "Pepper", "Basil", "Cucumber", "Potato", "Eggplant", "Zucchini", "Peppers", "Mushrooms", "Rice", "Pasta"
+    ];
+    const ingredientsList = document.getElementById('ingredients-list');
+    const ingredientSearch = document.getElementById('ingredient-search');
+    const ingredientsDropdown = document.getElementById('ingredients-dropdown');
+    const findRecipeBtn = document.getElementById('find-recipe-btn');
+    const pageNavigation = document.getElementById('page-navigation');
+    const recipeDisplay = document.getElementById('recipe-display'); // Added for recipe display
 
-// DOM Elements
-const ingredientSearch = document.getElementById('ingredient-search');
-const ingredientsDropdown = document.getElementById('ingredients-dropdown');
-const ingredientsList = document.getElementById('ingredients-list');
-const recipeTitle = document.getElementById('recipe-title');
-const recipeImage = document.getElementById('recipe-image');
-const recipeSteps = document.getElementById('recipe-steps');
+    let currentPage = 0;
+    const itemsPerPage = 10;
+    let selectedIngredients = [];
 
-// Expanded ingredients database
-const ingredients = [
-    "Apple", "Banana", "Orange", "Lemon", "Lime", "Strawberry", "Blueberry", "Raspberry", "Blackberry", "Grape", 
-    "Pineapple", "Mango", "Peach", "Pear", "Plum", "Kiwi", "Watermelon", "Cantaloupe", "Honeydew", "Coconut",
-    "Carrot", "Broccoli", "Spinach", "Lettuce", "Tomato", "Potato", "Sweet Potato", "Bell Pepper", "Cucumber", 
-    "Zucchini", "Eggplant", "Onion", "Garlic", "Mushroom", "Celery", "Asparagus", "Green Beans", "Peas", "Corn", 
-    "Cauliflower", "Chicken", "Beef", "Pork", "Turkey", "Fish", "Shrimp", "Tofu", "Eggs", "Salmon", "Tuna", 
-    "Lamb", "Duck", "Beans", "Lentils", "Chickpeas", "Ground Beef", "Chicken Breast", "Bacon", "Ham", "Sausage",
-    "Milk", "Cheese", "Butter", "Yogurt", "Cream", "Sour Cream", "Cream Cheese", "Mozzarella", "Cheddar", 
-    "Parmesan", "Almond Milk", "Soy Milk", "Oat Milk", "Coconut Milk", "Heavy Cream", "Rice", "Pasta", "Bread", 
-    "Flour", "Quinoa", "Oats", "Barley", "Couscous", "Tortilla", "Noodles", "Brown Rice", "White Rice", "Bread Crumbs", 
-    "Cornmeal", "Salt", "Pepper", "Basil", "Oregano", "Thyme", "Rosemary", "Cumin", "Paprika", "Cinnamon", 
-    "Nutmeg", "Ginger", "Turmeric", "Curry Powder", "Chili Powder", "Cayenne Pepper", "Bay Leaves", "Sage", 
-    "Mint", "Coriander", "Dill", "Olive Oil", "Vegetable Oil", "Soy Sauce", "Vinegar", "Mustard", "Mayonnaise", 
-    "Ketchup", "Hot Sauce", "BBQ Sauce", "Honey", "Maple Syrup", "Worcestershire Sauce", "Fish Sauce", 
-    "Teriyaki Sauce", "Sesame Oil", "Almonds", "Walnuts", "Peanuts", "Cashews", "Sesame Seeds", "Sunflower Seeds", 
-    "Pumpkin Seeds", "Pine Nuts", "Chia Seeds", "Flax Seeds"
-];
+    // Function to update ingredients list based on the current page
+    function updateIngredientsList() {
+        ingredientsList.innerHTML = '';
+        const startIdx = currentPage * itemsPerPage;
+        const endIdx = Math.min(startIdx + itemsPerPage, ingredients.length);
+        const pageIngredients = ingredients.slice(startIdx, endIdx);
 
-let selectedIngredients = new Set();
-
-// Initialize ingredients list with checkboxes
-function initializeIngredientsList() {
-    ingredientsList.innerHTML = ingredients
-        .sort()
-        .map(ing => `
-            <div class="ingredient-item">
-                <input type="checkbox" 
-                       id="check-${ing.toLowerCase().replace(/\s+/g, '-')}" 
-                       class="ingredient-checkbox">
-                <label class="ingredient-label" 
-                       for="check-${ing.toLowerCase().replace(/\s+/g, '-')}">
-                    ${ing}
-                </label>
-            </div>
-        `).join('');
-
-    // Add event listeners to checkboxes
-    document.querySelectorAll('.ingredient-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const ingredient = e.target.nextElementSibling.textContent.trim();
-            if (e.target.checked) {
-                selectedIngredients.add(ingredient);
-            } else {
-                selectedIngredients.delete(ingredient);
-            }
-            fetchRecipes();
-        });
-    });
-}
-
-// Create background stars
-function createStars() {
-    const starsContainer = document.querySelector('.background-stars');
-    for (let i = 0; i < 50; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        star.style.animationDelay = `${Math.random() * 3}s`;
-        starsContainer.appendChild(star);
-    }
-}
-
-// Search and filter ingredients
-ingredientSearch.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase().trim();
-    const filteredIngredients = ingredients.filter(ing => ing.toLowerCase().includes(searchTerm));
-    
-    displayDropdown(filteredIngredients);
-
-    document.querySelectorAll('.ingredient-item').forEach(item => {
-        const label = item.querySelector('.ingredient-label');
-        item.style.backgroundColor = searchTerm && label.textContent.toLowerCase().includes(searchTerm)
-            ? 'rgba(255, 255, 255, 0.1)' 
-            : '';
-    });
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-container')) {
-        ingredientsDropdown.className = 'ingredients-dropdown';
-    }
-});
-
-function displayDropdown(items) {
-    ingredientsDropdown.innerHTML = '';
-    ingredientsDropdown.className = 'ingredients-dropdown' + (items.length ? ' active' : '');
-    
-    items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dropdown-item';
-        div.textContent = item;
-        div.onclick = () => {
-            addIngredient(item);
-            ingredientSearch.value = '';
-            ingredientsDropdown.className = 'ingredients-dropdown';
-            document.querySelectorAll('.ingredient-item').forEach(item => {
-                item.style.backgroundColor = '';
-            });
-        };
-        ingredientsDropdown.appendChild(div);
-    });
-}
-
-function addIngredient(ingredient) {
-    selectedIngredients.add(ingredient);
-    const checkbox = document.querySelector(`#check-${ingredient.toLowerCase().replace(/\s+/g, '-')}`);
-    if (checkbox) checkbox.checked = true;
-    fetchRecipes();
-}
-
-// Fetch recipes
-async function fetchRecipes() {
-    if (selectedIngredients.size === 0) {
-        recipeTitle.textContent = 'Please select ingredients';
-        recipeImage.innerHTML = '';
-        recipeSteps.innerHTML = '';
-        return;
-    }
-
-    const ingredients = Array.from(selectedIngredients).join(',');
-    recipeTitle.textContent = 'Searching for recipes...';
-    
-    try {
-        const response = await fetch(`${API_URL}?ingredients=${ingredients}&number=1&apiKey=${API_KEY}`);
-        const data = await response.json();
-        
-        if (data.length > 0) {
-            const recipe = data[0];
-            recipeTitle.textContent = recipe.title;
-            recipeImage.innerHTML = `<img src="${recipe.image}" alt="${recipe.title}">`;
-            recipeSteps.innerHTML = `
-                <h3>Recipe Details</h3>
-                <p><strong>Used Ingredients:</strong> ${recipe.usedIngredients?.map(i => i.name).join(', ') || 'Not specified'}</p>
-                <p><strong>Missing Ingredients:</strong> ${recipe.missedIngredients?.map(i => i.name).join(', ') || 'None'}</p>
-                <p><strong>Likes:</strong> ${recipe.likes || 0}</p>
-                <a href="https://spoonacular.com/recipes/${recipe.title.toLowerCase().replace(/\s+/g, '-')}-${recipe.id}" 
-                   target="_blank" class="view-recipe-btn">View Full Recipe</a>
+        pageIngredients.forEach(ingredient => {
+            const ingredientItem = document.createElement('div');
+            ingredientItem.classList.add('ingredient-item');
+            ingredientItem.innerHTML = `
+                <input type="checkbox" class="ingredient-checkbox" id="${ingredient}" />
+                <label for="${ingredient}" class="ingredient-label">${ingredient}</label>
             `;
-        } else {
-            recipeTitle.textContent = 'No recipes found with these ingredients';
-            recipeImage.innerHTML = '';
-            recipeSteps.innerHTML = '<p>Try selecting different ingredients</p>';
-        }
-    } catch (error) {
-        console.error('Error fetching recipes:', error);
-        recipeTitle.textContent = 'Error fetching recipes';
-        recipeSteps.innerHTML = '<p>Please try again later</p>';
-    }
-}
+            ingredientsList.appendChild(ingredientItem);
+        });
 
-// Initialize
-initializeIngredientsList();
-createStars();
+        const totalPages = Math.ceil(ingredients.length / itemsPerPage);
+        pageNavigation.innerHTML = `
+            <button ${currentPage === 0 ? 'disabled' : ''} onclick="changePage(-1)">Previous</button>
+            <button ${currentPage === totalPages - 1 ? 'disabled' : ''} onclick="changePage(1)">Next</button>
+        `;
+    }
+
+    // Function to change page
+    window.changePage = function(direction) {
+        currentPage += direction;
+        updateIngredientsList();
+    };
+
+    // Function to filter ingredients based on search input
+    function filterIngredients(query) {
+        const filteredIngredients = ingredients.filter(ingredient =>
+            ingredient.toLowerCase().includes(query.toLowerCase())
+        );
+        ingredientsDropdown.innerHTML = '';
+        filteredIngredients.forEach(ingredient => {
+            const item = document.createElement('div');
+            item.classList.add('dropdown-item');
+            item.textContent = ingredient;
+            ingredientsDropdown.appendChild(item);
+        });
+        ingredientsDropdown.classList.add('active');
+    }
+
+    // Event listener for search input
+    ingredientSearch.addEventListener('input', (e) => {
+        const query = e.target.value;
+        if (query) {
+            filterIngredients(query);
+        } else {
+            ingredientsDropdown.classList.remove('active');
+        }
+    });
+
+    // Event listener for selecting an ingredient from the dropdown
+    ingredientsDropdown.addEventListener('click', (e) => {
+        if (e.target.classList.contains('dropdown-item')) {
+            ingredientSearch.value = e.target.textContent;
+            ingredientsDropdown.classList.remove('active');
+        }
+    });
+
+    // Event listener for the find recipe button
+    findRecipeBtn.addEventListener('click', () => {
+        // Gather selected ingredients
+        selectedIngredients = [];
+        document.querySelectorAll('.ingredient-checkbox:checked').forEach(checkbox => {
+            selectedIngredients.push(checkbox.id);
+        });
+
+        // If no ingredients selected, show an alert
+        if (selectedIngredients.length === 0) {
+            alert('Please select at least one ingredient.');
+            return;
+        }
+
+        // Simulate a recipe based on selected ingredients
+        displayRecipe(selectedIngredients);
+    });
+
+    // Function to display the recipe
+    function displayRecipe(ingredients) {
+        // Example: simulate a recipe based on selected ingredients
+        const recipe = `
+            <h3>Recipe Based on Selected Ingredients:</h3>
+            <p><strong>Ingredients:</strong> ${ingredients.join(', ')}</p>
+            <p><strong>Instructions:</strong> Combine all selected ingredients in a pan and cook for 15 minutes. Enjoy your meal!</p>
+        `;
+        recipeDisplay.innerHTML = recipe;
+    }
+
+    // Initial update of the ingredients list
+    updateIngredientsList();  
+});
